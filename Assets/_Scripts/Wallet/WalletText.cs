@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class WalletText : MonoBehaviour
 {
-    [field: SerializeField] private Character _character;
+    [SerializeField] private Character _character;
     
     private TMP_Text _coinsText;
 
@@ -11,7 +11,7 @@ public class WalletText : MonoBehaviour
     {
         _coinsText = GetComponentInChildren<TMP_Text>();
     
-        _character.CoinPicked += OnCoinPicked;
+        _character.Wallet.CoinPicked += OnCoinPicked;
     }
 
     private void OnCoinPicked(int value)

@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-public class WinTimer : MonoBehaviour
+public class Timer : MonoBehaviour
 {
     private TMP_Text _counterText;
 

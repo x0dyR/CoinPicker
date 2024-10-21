@@ -1,13 +1,10 @@
-using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
 public class Character : MonoBehaviour
 {
-    public event Action<int> CoinPicked;
-
-    [field: SerializeField] private float _speed;
-    [field: SerializeField] private float _jumpForce;
+    [SerializeField] private float _speed;
+    [SerializeField] private float _jumpForce;
 
     private const string HorizontalAxis = "Horizontal";
     private const string VerticalAxis = "Vertical";
@@ -15,8 +12,7 @@ public class Character : MonoBehaviour
     private const float DeadZone = .1f;
 
     private bool _isJump;
-
-    private int _coins;
+    private Jumper _jumper;
 
     private Rigidbody _rigidbody;
     private SphereCollider _collider;
@@ -24,25 +20,38 @@ public class Character : MonoBehaviour
     private Camera _camera;
 
     private bool _isRunning;
+    private Mover _mover;
+
+    private int _coins;
+    private Wallet _wallet;
+    private CoinCollector _coinCollector;
+
+    public int Coins => _coins;
+
+    public Wallet Wallet => _wallet;
 
     public void Initialize(Vector3 spawnPosition)
     {
+        _wallet = new Wallet();
+        
         transform.position = spawnPosition;
 
         _rigidbody = GetComponent<Rigidbody>();
         _collider = GetComponent<SphereCollider>();
+
+        _mover = new Mover(_rigidbody, _speed);
+        _jumper = new Jumper(_rigidbody, _jumpForce);
+
+        _coinCollector = new CoinCollector(_wallet);
 
         _camera = Camera.main;
 
         StartCharacter();
     }
 
-    public int Coins => _coins;
-
     public void ResetCharacter(Vector3 spawnPosition)
     {
-        _coins = 0;
-        CoinPicked?.Invoke(_coins);
+        _wallet.ResetWallet();
 
         transform.position = spawnPosition;
 
@@ -63,42 +72,26 @@ public class Character : MonoBehaviour
         _isRunning = true;
         _rigidbody.isKinematic = false;
     }
-    
+
     private void Update()
     {
         if (_isRunning)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                _isJump = true;
-        }
+            _jumper.Update();
     }
 
     private void FixedUpdate()
     {
         if (_isRunning)
         {
-            if (Mathf.Abs(Input.GetAxisRaw(VerticalAxis)) >= DeadZone)
-                _rigidbody.AddForce(_speed * Input.GetAxisRaw(VerticalAxis) * _camera.transform.forward);
-
-            if (Mathf.Abs(Input.GetAxisRaw(HorizontalAxis)) >= DeadZone)
-                _rigidbody.AddForce(_speed * Input.GetAxisRaw(HorizontalAxis) * _camera.transform.right);
-
-            if (_isJump)
-            {
-                _rigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
-                _isJump = false;
-            }
+            _jumper.FixedUpdate();
+            _mover.FixedUpdate();
         }
     }
 
     private void OnTriggerEnter(Collider collider)
     {
         if (collider.TryGetComponent(out Coin coin))
-        {
-            _coins += coin.Value;
-            CoinPicked?.Invoke(_coins);
-
-            coin.gameObject.SetActive(false);
-        }
+            _coinCollector.CollectCoin(coin);
     }
 }
+

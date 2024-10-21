@@ -4,73 +4,114 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-    [field: SerializeField] private List<Coin> _coins;
+    [SerializeField] private Coin _coinPrefab;
+    [SerializeField] private List<Transform> _coinsSpawnPoints;
 
-    [field: SerializeField] private Character _character;
-    [field: SerializeField] private Transform _characterSpawnPoint;
+    [SerializeField] private Character _character;
+    [SerializeField] private Transform _characterSpawnPoint;
 
-    [field: SerializeField] private WinTimer _winTimer;
+    [SerializeField] private Timer _timer;
 
-    [field: SerializeField] private float _winTime;
+    [SerializeField] private float _winTime;
 
-    [field: SerializeField] private GameObject _blackScreen;
-    [field: SerializeField] private TMP_Text _winText;
-    [field: SerializeField] private TMP_Text _loseText;
+    [SerializeField] private GameObject _blackScreen;
+    [SerializeField] private TMP_Text _winText;
+    [SerializeField] private TMP_Text _loseText;
 
-    [field:SerializeField]private int _currentCoinsCount;    
+    [SerializeField] private int _currentCoinsCount;
+
+    private CoinSpawner _coinSpawner;
+
+    public int CoinsCount => _coinsSpawnPoints.Count;
 
     private void Awake()
     {
         _character.Initialize(_characterSpawnPoint.position);
-        _character.CoinPicked += OnCoinPicked;
-        
-        _currentCoinsCount = 0;
+        _character.Wallet.CoinPicked += OnCoinPicked;
 
-        _winTimer.Initialize(_winTime);
+        _timer.Initialize(_winTime);
+
+        _coinSpawner = new(_coinPrefab, _coinsSpawnPoints);
+        _coinSpawner.SpawnCoins();
     }
 
     private void OnCoinPicked(int value)
     {
-        _currentCoinsCount++;
+        if (value > 0)
+            _currentCoinsCount++;
     }
 
     private void Update()
     {
-        if (_currentCoinsCount == _coins.Count)
-        {
-            _winTimer.StopTimer();
-            _character.StopCharacter();
-
-            _blackScreen.gameObject.SetActive(true);
-
-            if (_currentCoinsCount >= _coins.Count)
-                _winText.gameObject.SetActive(true);
-        }
-        else if(_winTimer.CurrentTime <= 0.0f)
-        {
-            _winTimer.StopTimer();
-            _character.StopCharacter();
-
-            _blackScreen.gameObject.SetActive(true);
-                        
-            if (_currentCoinsCount < _coins.Count)
-                _loseText.gameObject.SetActive(true);
-        }
+        DetermineCondition();
 
         if (Input.GetKeyDown(KeyCode.R))
         {
-            foreach (var coin in _coins)
-                coin.gameObject.SetActive(true);
-
-            _character.ResetCharacter(_characterSpawnPoint.position);
-
-            _currentCoinsCount = 0;
-
-            _winTimer.ResetTime();
-
-            _blackScreen.gameObject.SetActive(false);
-            _loseText.gameObject.SetActive(false);
-            _winText.gameObject.SetActive(false);
+            ResetGame();
         }
+    }
+
+    private void ResetGame()
+    {
+        _character.ResetCharacter(_characterSpawnPoint.position);
+
+        _currentCoinsCount = 0;
+
+        ResetCoins();
+
+        _timer.ResetTime();
+
+        HideConditionsScreen();
+    }
+
+    private void ResetCoins()
+    {
+        _coinSpawner.DestoyCoins();
+        _coinSpawner.SpawnCoins();
+    }
+
+    private void HideConditionsScreen()
+    {
+        _blackScreen.SetActive(false);
+        _loseText.gameObject.SetActive(false);
+        _winText.gameObject.SetActive(false);
+    }
+
+    private void DetermineCondition()
+    {
+        if (_currentCoinsCount == CoinsCount)
+        {
+            Win();
+        }
+        else if (_timer.CurrentTime <= 0.0f)
+        {
+            Lose();
+        }
+    }
+
+    private void Lose()
+    {
+        StopEntities();
+
+        _blackScreen.SetActive(true);
+
+        if (_currentCoinsCount < CoinsCount)
+            _loseText.gameObject.SetActive(true);
+    }
+
+    private void Win()
+    {
+        StopEntities();
+
+        _blackScreen.SetActive(true);
+
+        if (_currentCoinsCount >= CoinsCount)
+            _winText.gameObject.SetActive(true);
+    }
+
+    private void StopEntities()
+    {
+        _timer.StopTimer();
+        _character.StopCharacter();
     }
 }
