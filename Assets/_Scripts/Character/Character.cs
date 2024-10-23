@@ -6,9 +6,6 @@ public class Character : MonoBehaviour
     [SerializeField] private float _speed;
     [SerializeField] private float _jumpForce;
 
-    private const string HorizontalAxis = "Horizontal";
-    private const string VerticalAxis = "Vertical";
-
     private const float DeadZone = .1f;
 
     private bool _isJump;
@@ -19,8 +16,12 @@ public class Character : MonoBehaviour
 
     private Camera _camera;
 
+    private InputSystem _input;
+
     private bool _isRunning;
     private Mover _mover;
+
+    private Vector3 _moveDirection;
 
     private int _coins;
     private Wallet _wallet;
@@ -33,11 +34,13 @@ public class Character : MonoBehaviour
     public void Initialize(Vector3 spawnPosition)
     {
         _wallet = new Wallet();
-        
+
         transform.position = spawnPosition;
 
         _rigidbody = GetComponent<Rigidbody>();
         _collider = GetComponent<SphereCollider>();
+
+        _input = new InputSystem();
 
         _mover = new Mover(_rigidbody, _speed);
         _jumper = new Jumper(_rigidbody, _jumpForce);
@@ -76,15 +79,22 @@ public class Character : MonoBehaviour
     private void Update()
     {
         if (_isRunning)
+        {
+            _moveDirection = _input.ReadInput();
+
+            if (_input.ReadInput().magnitude > Vector3.zero.magnitude)
+                _moveDirection = (_camera.transform.forward * _moveDirection.z) + (_camera.transform.right * _moveDirection.x); 
+            
             _jumper.Update();
+        }
     }
 
     private void FixedUpdate()
     {
         if (_isRunning)
         {
-            _jumper.FixedUpdate();
-            _mover.FixedUpdate();
+            _jumper.ProcessJump();
+            _mover.MoveEntity(_moveDirection);
         }
     }
 

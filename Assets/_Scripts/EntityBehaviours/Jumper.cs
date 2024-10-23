@@ -20,7 +20,7 @@ public class Jumper
             _isJumping = true;
     }
 
-    public void FixedUpdate()
+    public void ProcessJump()
     {
         if (_isJumping)
         {

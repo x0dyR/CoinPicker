@@ -17,12 +17,9 @@ public class Mover
         _speed = speed;
     }
 
-    public void FixedUpdate()
+    public void MoveEntity(Vector3 direction)
     {
-        if (Mathf.Abs(Input.GetAxisRaw(VerticalAxis)) >= DeadZone)
-            _rigidbody.AddForce(_speed * Input.GetAxisRaw(VerticalAxis) * Camera.main.transform.forward);
-
-        if (Mathf.Abs(Input.GetAxisRaw(HorizontalAxis)) >= DeadZone)
-            _rigidbody.AddForce(_speed * Input.GetAxisRaw(HorizontalAxis) * Camera.main.transform.right);
+        if (direction.sqrMagnitude >= DeadZone * DeadZone)
+            _rigidbody.AddForce(_speed * direction);
     }
 }

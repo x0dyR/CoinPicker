@@ -11,7 +11,10 @@ public class Coin : MonoBehaviour
     private SphereCollider _collider;
 
     private void Awake()
-        => _collider = GetComponent<SphereCollider>();
+    {
+        _collider = GetComponent<SphereCollider>();
+        _collider.isTrigger = true;
+    }
 
     public void RandomizeValue()
         => Value = Random.Range(_minValue, _maxValue);
