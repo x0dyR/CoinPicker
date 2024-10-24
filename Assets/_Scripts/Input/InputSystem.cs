@@ -7,4 +7,7 @@ public class InputSystem
 
     public Vector3 ReadInput()
         => new(Input.GetAxisRaw(HorizontalAxis), 0, Input.GetAxisRaw(VerticalAxis));
+
+    public bool ReadJump()
+        => Input.GetKeyDown(KeyCode.Space);
 }

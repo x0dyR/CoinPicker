@@ -23,6 +23,8 @@ public class Character : MonoBehaviour
 
     private Vector3 _moveDirection;
 
+    private bool _isJumping;
+
     private int _coins;
     private Wallet _wallet;
     private CoinCollector _coinCollector;
@@ -78,24 +80,24 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
+        _moveDirection = _input.ReadInput();
+        _isJumping = _input.ReadJump();
+
         if (_isRunning)
         {
-            _moveDirection = _input.ReadInput();
-
             if (_input.ReadInput().magnitude > Vector3.zero.magnitude)
-                _moveDirection = (_camera.transform.forward * _moveDirection.z) + (_camera.transform.right * _moveDirection.x); 
-            
-            _jumper.Update();
+                _moveDirection = (_camera.transform.forward * _moveDirection.z) + (_camera.transform.right * _moveDirection.x);
+
+            if (_isJumping)
+                _jumper.ProcessJump();
         }
     }
 
     private void FixedUpdate()
     {
         if (_isRunning)
-        {
-            _jumper.ProcessJump();
             _mover.MoveEntity(_moveDirection);
-        }
+
     }
 
     private void OnTriggerEnter(Collider collider)
